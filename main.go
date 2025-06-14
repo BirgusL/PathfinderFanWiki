@@ -9,6 +9,7 @@ import (
 	"log"
 	"net/http"
 	"net/url"
+	"os"
 	"strings"
 	"time"
 
@@ -114,9 +115,15 @@ func main() {
 	var handler http.Handler = mux
 	handler = loggingMiddleware(db, handler)
 
+	port := os.Getenv("PORT")
+
+	if port == "" {
+		port = "3000"
+	}
+
 	// Start server
-	fmt.Println("Server running on http://localhost:8080")
-	log.Fatal(http.ListenAndServe(":8080", handler))
+	fmt.Println("Server running on http://localhost:" + port)
+	log.Fatal(http.ListenAndServe("0.0.0.0:"+port, handler))
 }
 
 func homeHandler(w http.ResponseWriter, r *http.Request) {
