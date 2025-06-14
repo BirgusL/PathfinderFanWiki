@@ -13,7 +13,7 @@ import (
 	"strings"
 	"time"
 
-	_ "github.com/mattn/go-sqlite3"
+	_ "modernc.org/sqlite"
 )
 
 var db *sql.DB
@@ -88,7 +88,7 @@ func (j JSONStringSlice) String() string {
 func main() {
 	var err error
 	// Initialize database
-	db, err = sql.Open("sqlite3", "./database/spells.db")
+	db, err = sql.Open("sqlite", "./database/spells.db")
 	if err != nil {
 		log.Fatal(err)
 	}
