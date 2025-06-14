@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="{{.Language}}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pathfinder Wiki</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=MedievalSharp&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Pathfinder Fan Wiki</h1>
+            <div class="language-selector">
+                <form action="/set-language" method="post">
+                    <input type="hidden" name="return_to" value="{{.ReturnTo}}">
+                    <select name="lang" onchange="this.form.submit()">
+                        {{range .AvailableLangs}}
+                        <option value="{{.}}" {{if eq . $.Language}}selected{{end}}>
+                            {{if eq . "EN"}}English{{end}}
+                        </option>
+                        {{end}}
+                    </select>
+                </form>
+            </div>
+            <nav>
+                <a href="/">Home</a>
+            </nav>
+        </header>
+
+<div class="home-page">
+    <div class="game-buttons">
+        <a href="/kingmaker" class="game-button">{{"Kingmaker" | translate .Language}}</a>
+        <a style="background: linear-gradient(145deg, #333333, #222222);
+    border-color: #666666;" class="game-button">{{"Wrath of the Righteous" | translate .Language}}</a>
+    </div>
+</div>
+
+<footer>
+    <button id="donateBtn" class="donate-button">Buy me a coffee</button>
+</footer>
+
+<div id="donateModal" class="modal">
+    <div class="modal-content fantasy-modal">
+        <div class="parchment">
+            <span class="close">&times;</span>
+            <div class="header">
+                <h2>🛡️ Support the laborer 🛡️</h2>
+                <div class="divider">
+                    <div class="divider-left"></div>
+                    <div class="divider-center">✧</div>
+                    <div class="divider-right"></div>
+                </div>
+            </div>
+            <div class="donate-details">
+                <div class="donate-item">
+                    <span class="icon">💰</span>
+                    <span class="label">Golden coins:</span>
+                    <span href="https://www.donationalerts.com/r/birguslatro" class="value">https://www.donationalerts.com/r/birguslatro</span>
+                    <button class="copy-btn fantasy-btn">📜</button>
+                </div>
+                <div class="donate-item">
+                    <span class="icon">🔮</span>
+                    <span class="label">Magic crystals:</span>
+                    <span class="value">0xdd28b4c7cf2a42180bdd47f9985a7d4bbfbe16da</span>
+                    <button class="copy-btn fantasy-btn">📜</button>
+                </div>
+                <div class="donate-item">
+                    <span class="icon">🕊️</span>
+                    <span class="label">Pigeon mail:</span>
+                    <span class="value">kaktus.fikus2024@gmail.com</span>
+                    <button class="copy-btn fantasy-btn">📜</button>
+                </div>
+            </div>
+            <div class="footer">
+                <p>Your support helps me see a miracle!</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+</div>
+</body>
+</html>
+
+<script>
+    // Получаем элементы
+    const modal = document.getElementById("donateModal");
+    const btn = document.getElementById("donateBtn");
+    const span = document.getElementsByClassName("close")[0];
+
+    // Открываем модальное окно при клике на кнопку
+    btn.onclick = function() {
+        modal.style.display = "block";
+    }
+
+    // Закрываем при клике на крестик
+    span.onclick = function() {
+        modal.style.display = "none";
+    }
+
+    // Закрываем при клике вне окна
+    window.onclick = function(event) {
+        if (event.target == modal) {
+            modal.style.display = "none";
+        }
+    }
+    document.querySelectorAll('.copy-btn').forEach(btn => {
+    btn.addEventListener('click', function() {
+        const valueElement = this.parentElement.querySelector('.value');
+        const text = valueElement.textContent.trim();
+        
+        navigator.clipboard.writeText(text).then(() => {
+            const originalText = this.textContent;
+            this.textContent = '✔️';
+            setTimeout(() => {
+                this.textContent = originalText;
+            }, 2000);
+        });
+    });
+});
+</script>

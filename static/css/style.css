@@ -1,0 +1,981 @@
+/* Основной контейнер */
+.spells-container {
+    background: rgba(30, 22, 15, 0.85);
+    border: 2px solid #8b5a2b;
+    border-radius: 10px;
+    box-shadow: 0 0 25px rgba(0, 0, 0, 0.7);
+    padding: 25px;
+    margin: 20px 0;
+    position: relative;
+    overflow: hidden;
+}
+
+.spells-container::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: url('/static/images/parchment-texture.png') center/cover;
+    opacity: 0.15;
+    z-index: -1;
+}
+
+.spells-container h2 {
+    color: #f8d485;
+    text-align: center;
+    font-size: 2.2rem;
+    margin: 0 0 25px 0;
+    text-shadow: 2px 2px 4px #000;
+    letter-spacing: 1px;
+    position: relative;
+    padding-bottom: 10px;
+}
+
+.spells-container h2::after {
+    content: "";
+    position: absolute;
+    bottom: 0;
+    left: 25%;
+    right: 25%;
+    height: 2px;
+    background: linear-gradient(to right, transparent, #8b5a2b, transparent);
+}
+
+/* Элементы управления */
+.spell-controls {
+    margin-bottom: 25px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 15px;
+    flex-wrap: wrap;
+}
+
+.spell-search {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    flex-grow: 1;
+    max-width: 600px;
+}
+
+.spell-search input[type="text"] {
+    flex-grow: 1;
+    background: rgba(20, 15, 10, 0.8);
+    color: #e0c097;
+    border: 1px solid #5c3a21;
+    border-radius: 5px;
+    padding: 10px 15px;
+    font-family: 'MedievalSharp', cursive;
+    font-size: 1rem;
+    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.5);
+    transition: all 0.3s ease;
+}
+
+.spell-search input[type="text"]:focus {
+    outline: none;
+    border-color: #f8d485;
+    box-shadow: 0 0 8px rgba(248, 212, 133, 0.6);
+}
+
+.spell-search input[type="text"]::placeholder {
+    color: #a09070;
+    font-style: italic;
+}
+
+.spell-search button, .reset-btn {
+    background: linear-gradient(to bottom, #8b5a2b, #5a3a1c);
+    color: #f8d485;
+    border: 1px solid #3a2a1c;
+    border-radius: 5px;
+    padding: 10px 20px;
+    font-family: 'MedievalSharp', cursive;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    text-shadow: 1px 1px 2px #000;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.4);
+    min-width: 100px;
+}
+
+.spell-search button:hover, .reset-btn:hover {
+    background: linear-gradient(to bottom, #9b6a3b, #6a4a2c);
+    color: #ffd700;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+}
+
+.spell-search button:active, .reset-btn:active {
+    transform: translateY(1px);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+}
+
+/* Таблица */
+.table-responsive {
+    overflow-x: auto;
+    margin-top: 20px;
+    border-radius: 8px;
+    box-shadow: 0 0 15px rgba(0, 0, 0, 0.6);
+    background: rgba(40, 30, 20, 0.7);
+    border: 1px solid #5c3a21;
+}
+
+.spell-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    font-size: 0.95rem;
+}
+
+.spell-table th {
+    background: linear-gradient(to bottom, #5a3a1c, #3d251e);
+    color: #f8d485;
+    padding: 15px;
+    text-align: left;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    font-size: 1rem;
+    text-shadow: 1px 1px 2px #000;
+    border-bottom: 2px solid #8b5a2b;
+}
+
+.spell-table th:first-child {
+    border-top-left-radius: 8px;
+}
+
+.spell-table th:last-child {
+    border-top-right-radius: 8px;
+}
+
+.spell-table td {
+    padding: 12px 15px;
+    border-bottom: 1px solid #5c4a3c;
+    color: #e0c097;
+    vertical-align: top;
+}
+
+.spell-table tr:nth-child(even) {
+    background-color: rgba(60, 45, 30, 0.5);
+}
+
+.spell-table tr:hover {
+    background-color: rgba(139, 90, 43, 0.3);
+}
+
+.spell-table tr:hover td {
+    color: #f8d485;
+    text-shadow: 0 0 3px rgba(248, 212, 133, 0.5);
+}
+
+/* Сортировка */
+.sort-arrows {
+    display: inline-flex;
+    flex-direction: column;
+    margin-left: 8px;
+    vertical-align: middle;
+}
+
+.sort-arrows a {
+    color: #a09070;
+    text-decoration: none;
+    font-size: 0.9rem;
+    line-height: 0.8;
+    transition: all 0.2s ease;
+}
+
+.sort-arrows a.active {
+    color: #f8d485;
+    text-shadow: 0 0 5px #ffd700;
+    font-weight: bold;
+}
+
+.sort-arrows a:hover:not(.active) {
+    color: #d4b070;
+}
+
+/* Фильтры */
+.filter-dropdown {
+    position: relative;
+    display: inline-block;
+    margin-left: 8px;
+    vertical-align: middle;
+}
+
+.filter-btn {
+    background: none;
+    border: none;
+    color: #f8d485;
+    cursor: pointer;
+    font-size: 1rem;
+    padding: 0 5px;
+    transition: all 0.2s ease;
+    text-shadow: 1px 1px 2px #000;
+}
+
+.filter-btn:hover {
+    color: #ffd700;
+    transform: scale(1.1);
+}
+
+.filter-menu {
+    display: none;
+    position: absolute;
+    background: #3d251e;
+    overflow-y: auto;
+    z-index: 100;
+    padding: 15px;
+    border-radius: 5px;
+    border: 1px solid #8b5a2b;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    margin-top: 5px;
+}
+
+.filter-menu label {
+    display: block;
+    padding: 8px 5px;
+    color: #e0c097;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border-radius: 3px;
+}
+
+.filter-menu label:hover {
+    background-color: rgba(139, 90, 43, 0.3);
+    color: #f8d485;
+}
+
+.filter-menu input[type="checkbox"] {
+    margin-right: 10px;
+    accent-color: #8b5a2b;
+    transform: scale(1.2);
+}
+
+.filter-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 15px;
+    justify-content: center;
+}
+
+.apply-filter, .clear-filter {
+    padding: 8px 15px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-family: 'MedievalSharp', cursive;
+    font-size: 0.9rem;
+    transition: all 0.2s ease;
+    flex: 1;
+    text-align: center;
+}
+
+.apply-filter {
+    background-color: #4a6b23;
+    color: #e0f097;
+}
+
+.clear-filter {
+    background-color: #6b2323;
+    color: #f0c0c0;
+}
+
+.apply-filter:hover {
+    background-color: #5b7c34;
+    transform: translateY(-2px);
+}
+
+.clear-filter:hover {
+    background-color: #7c3434;
+    transform: translateY(-2px);
+}
+
+/* Анимации */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.spell-table tbody tr {
+    animation: fadeIn 0.4s ease-out forwards;
+}
+
+/* Адаптивность */
+@media (max-width: 768px) {
+    .spell-controls {
+        flex-direction: column;
+    }
+    
+    .spell-search {
+        width: 100%;
+    }
+    
+    .spell-table th, .spell-table td {
+        padding: 10px 8px;
+        font-size: 0.85rem;
+    }
+    
+    .filter-menu {
+        min-width: 180px;
+        max-height: 300px;
+    }
+}
+
+/* Основные стили контейнера */
+.container {
+    margin: 0 auto;
+    padding: 20px;
+    background-color: rgba(26, 18, 11, 0.9);
+    background-image: url('/static/images/old-paper-texture.jpg');
+    background-blend-mode: overlay;
+    border: 2px solid #5c3a21;
+    border-radius: 10px;
+    box-shadow: 0 0 30px rgba(0, 0, 0, 0.8);
+    min-height: 100vh;
+    position: relative;
+}
+
+/* Стили для шапки */
+header {
+    background: linear-gradient(135deg, #3d251e 0%, #5c3a21 100%);
+    padding: 20px;
+    border-radius: 8px;
+    border: 1px solid #8b5a2b;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.6);
+    margin-bottom: 30px;
+    position: relative;
+    overflow: hidden;
+}
+
+header::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, transparent, #f8d485, transparent);
+}
+
+header h1 {
+    color: #f8d485;
+    text-align: center;
+    font-size: 2.5rem;
+    margin: 0;
+    text-shadow: 2px 2px 4px #000, 
+                 0 0 10px rgba(248, 212, 133, 0.3);
+    letter-spacing: 2px;
+    font-weight: normal;
+    padding: 10px 0;
+}
+
+/* Выбор языка */
+.language-selector {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    z-index: 10;
+}
+
+.language-selector form {
+    margin: 0;
+}
+
+.language-selector select {
+    background: rgba(40, 30, 20, 0.8);
+    color: #e0c097;
+    border: 1px solid #8b5a2b;
+    border-radius: 5px;
+    padding: 8px 12px;
+    font-family: 'MedievalSharp', cursive;
+    font-size: 0.9rem;
+    cursor: pointer;
+    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.5);
+    transition: all 0.3s ease;
+    appearance: none;
+    background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23e0c097'%3e%3cpath d='M7 10l5 5 5-5z'/%3e%3c/svg%3e");
+    background-repeat: no-repeat;
+    background-position: right 8px center;
+    background-size: 12px;
+    padding-right: 30px;
+}
+
+.language-selector select:hover {
+    border-color: #f8d485;
+    box-shadow: 0 0 8px rgba(248, 212, 133, 0.4);
+}
+
+.language-selector select:focus {
+    outline: none;
+    border-color: #ffd700;
+}
+
+/* Навигация */
+nav {
+    margin-top: 15px;
+    text-align: center;
+}
+
+nav a {
+    color: #f8d485;
+    text-decoration: none;
+    padding: 8px 20px;
+    margin: 0 5px;
+    border: 1px solid #8b5a2b;
+    border-radius: 20px;
+    background: rgba(139, 90, 43, 0.3);
+    transition: all 0.3s ease;
+    font-size: 0.95rem;
+    display: inline-block;
+}
+
+nav a:hover {
+    background: rgba(139, 90, 43, 0.6);
+    color: #ffd700;
+    text-shadow: 0 0 5px #ffd700;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+}
+
+/* Страница Kingmaker */
+.kingmaker-page {
+    background: rgba(40, 30, 20, 0.7);
+    padding: 30px;
+    border-radius: 10px;
+    border: 1px solid #8b5a2b;
+    box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.4),
+                0 0 20px rgba(0, 0, 0, 0.5);
+    margin-bottom: 30px;
+    position: relative;
+}
+
+.kingmaker-page::before {
+    content: "";
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    right: 10px;
+    bottom: 10px;
+    border: 1px solid rgba(248, 212, 133, 0.2);
+    border-radius: 5px;
+    pointer-events: none;
+}
+
+.category-buttons {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 20px;
+    margin-top: 20px;
+}
+
+.category-button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 18px 10px;
+    background: linear-gradient(145deg, #4a3a23, #3d251e);
+    color: #f8d485;
+    border: 1px solid #8b5a2b;
+    border-radius: 8px;
+    text-decoration: none;
+    font-size: 1.1rem;
+    text-align: center;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3),
+                inset 0 0 5px rgba(255, 215, 0, 0.1);
+    position: relative;
+    overflow: hidden;
+    min-height: 70px;
+    text-shadow: 1px 1px 2px #000;
+}
+
+.category-button:hover {
+    background: linear-gradient(145deg, #5a4a33, #4d3526);
+    color: #ffd700;
+    transform: translateY(-5px) scale(1.02);
+    box-shadow: 0 8px 15px rgba(0, 0, 0, 0.4),
+                inset 0 0 10px rgba(255, 215, 0, 0.2);
+    text-shadow: 0 0 8px rgba(255, 215, 0, 0.5);
+}
+
+.category-button:active {
+    transform: translateY(2px);
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+}
+
+.category-button::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(
+        90deg,
+        transparent,
+        rgba(255, 255, 255, 0.1),
+        transparent
+    );
+    transition: 0.5s;
+}
+
+.category-button:hover::after {
+    left: 100%;
+}
+
+/* Специфические стили для кнопок категорий */
+.category-button[href*="spells"] {
+    background: linear-gradient(145deg, #3a1c5a, #2a1242);
+    border-color: #6b3b9b;
+}
+
+.category-button[href*="feats"] {
+    background: linear-gradient(145deg, #1c5a3a, #12422a);
+    border-color: #3b9b6b;
+}
+
+.category-button[href*="potions"] {
+    background: linear-gradient(145deg, #5a3a1c, #422a12);
+    border-color: #9b6b3b;
+}
+
+.category-button[href*="scrolls"] {
+    background: linear-gradient(145deg, #1c3a5a, #122a42);
+    border-color: #3b6b9b;
+}
+
+.category-button[href*="armor"] {
+    background: linear-gradient(145deg, #333333, #222222);
+    border-color: #666666;
+}
+
+.category-button[href*="weapon"] {
+    background: linear-gradient(145deg, #5a1c1c, #421212);
+    border-color: #9b3b3b;
+}
+
+.category-button[href*="accessories"] {
+    background: linear-gradient(145deg, #3a5a1c, #2a4212);
+    border-color: #6b9b3b;
+}
+
+.category-button[href*="items"] {
+    background: linear-gradient(145deg, #1c5a5a, #124242);
+    border-color: #3b9b9b;
+}
+
+.category-button[href*="locked"] {
+    background: linear-gradient(145deg, #333333, #222222);
+    border-color: #666666;
+}
+
+/* Подвал */
+footer {
+    text-align: center;
+    margin-top: 40px;
+    padding: 20px 0;
+    border-top: 1px solid #5c3a21;
+}
+
+.donate-button {
+    display: inline-block;
+    padding: 12px 30px;
+    background: linear-gradient(145deg, #5a2b8b, #3a1c5a);
+    color: #d485f8;
+    border: 1px solid #6b3b9b;
+    border-radius: 30px;
+    text-decoration: none;
+    font-family: 'MedievalSharp', cursive;
+    font-size: 1.1rem;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3),
+                inset 0 0 10px rgba(212, 133, 248, 0.2);
+    position: relative;
+    overflow: hidden;
+    text-shadow: 1px 1px 2px #000;
+}
+
+.donate-button:hover {
+    background: linear-gradient(145deg, #6b3b9b, #4a2c6a);
+    color: #e595ff;
+    transform: translateY(-3px);
+    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.4),
+                inset 0 0 15px rgba(212, 133, 248, 0.3);
+    text-shadow: 0 0 8px rgba(229, 149, 255, 0.6);
+}
+
+.donate-button:active {
+    transform: translateY(1px);
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+}
+
+.donate-button::before {
+    content: "";
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: linear-gradient(
+        to bottom right,
+        rgba(255, 255, 255, 0.1),
+        rgba(255, 255, 255, 0) 50%,
+        rgba(255, 255, 255, 0.1)
+    );
+    transform: rotate(30deg);
+    transition: all 0.7s ease;
+    opacity: 0;
+}
+
+.donate-button:hover::before {
+    animation: shine 1.5s ease infinite;
+    opacity: 0.5;
+}
+
+@keyframes shine {
+    0% { left: -50%; top: -50%; }
+    100% { left: 150%; top: 150%; }
+}
+
+/* Адаптивность */
+@media (max-width: 768px) {
+    .container {
+        padding: 15px;
+    }
+    
+    header {
+        padding: 15px;
+    }
+    
+    header h1 {
+        font-size: 2rem;
+        padding-right: 120px;
+    }
+    
+    .language-selector {
+        top: 15px;
+        right: 15px;
+    }
+    
+    .kingmaker-page {
+        padding: 20px;
+    }
+    
+    .category-buttons {
+        grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+        gap: 15px;
+    }
+    
+    .category-button {
+        padding: 15px 8px;
+        font-size: 1rem;
+        min-height: 60px;
+    }
+}
+
+@media (max-width: 480px) {
+    .category-buttons {
+        grid-template-columns: 1fr 1fr;
+    }
+    
+    .donate-button {
+        padding: 10px 20px;
+        font-size: 1rem;
+    }
+}
+
+/* Основные стили для главной страницы */
+.home-page {
+    background: rgba(40, 30, 20, 0.8);
+    padding: 40px;
+    border-radius: 10px;
+    border: 1px solid #8b5a2b;
+    box-shadow: 0 0 25px rgba(0, 0, 0, 0.6);
+    margin: 30px 0;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+}
+
+.home-page::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: url('/static/images/parchment-texture.jpg') center/cover;
+    opacity: 0.1;
+    z-index: -1;
+}
+
+/* Контейнер для кнопок игр */
+.game-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 25px;
+    max-width: 500px;
+    margin: 0 auto;
+}
+
+/* Стили для кнопок игр */
+.game-button {
+    display: block;
+    padding: 25px 20px;
+    background: linear-gradient(145deg, #5a3a1c, #3d251e);
+    color: #f8d485;
+    border: 2px solid #8b5a2b;
+    border-radius: 8px;
+    text-decoration: none;
+    font-size: 1.5rem;
+    text-align: center;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4),
+                inset 0 0 10px rgba(248, 212, 133, 0.1);
+    position: relative;
+    overflow: hidden;
+    text-shadow: 1px 1px 3px #000;
+    letter-spacing: 1px;
+}
+
+.game-button:hover {
+    background: linear-gradient(145deg, #6a4a2c, #4d3526);
+    color: #ffd700;
+    transform: translateY(-5px) scale(1.02);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.5),
+                inset 0 0 15px rgba(255, 215, 0, 0.2);
+    text-shadow: 0 0 10px rgba(255, 215, 0, 0.6);
+    border-color: #f8d485;
+}
+
+.game-button:active {
+    transform: translateY(2px);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+/* Эффект сияния при наведении */
+.game-button::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(
+        90deg,
+        transparent,
+        rgba(255, 255, 255, 0.1),
+        transparent
+    );
+    transition: 0.5s;
+}
+
+.game-button:hover::after {
+    left: 100%;
+}
+
+/* Специфические стили для разных игр */
+.game-button[href*="kingmaker"] {
+    background: linear-gradient(145deg, #3a1c5a, #2a1242);
+    border-color: #6b3b9b;
+}
+
+.game-button[href*="kingmaker"]:hover {
+    background: linear-gradient(145deg, #4a2c6a, #3a1c5a);
+}
+
+.game-button[href*="wrath"] {
+    background: linear-gradient(145deg, #1c3a5a, #122a42);
+    border-color: #3b6b9b;
+}
+
+.game-button[href*="wrath"]:hover {
+    background: linear-gradient(145deg, #2c4a6a, #1c3a5a);
+}
+
+/* Адаптивность */
+@media (max-width: 768px) {
+    .home-page {
+        padding: 30px 20px;
+    }
+    
+    .game-buttons {
+        gap: 20px;
+    }
+    
+    .game-button {
+        padding: 20px 15px;
+        font-size: 1.3rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .game-buttons {
+        gap: 15px;
+    }
+    
+    .game-button {
+        padding: 18px 10px;
+        font-size: 1.2rem;
+    }
+}
+
+/* Анимации */
+@keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.03); }
+    100% { transform: scale(1); }
+}
+
+.game-button {
+    animation: pulse 4s infinite ease-in-out;
+}
+
+.game-button:hover {
+    animation: none;
+}
+
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.7);
+}
+
+.fantasy-modal {
+    background: none;
+    border: none;
+    box-shadow: none;
+    max-width: 600px;
+    margin: 10% auto;
+}
+
+.parchment {
+    position: relative;
+    background: #f5e7c1;
+    border: 12px solid transparent;
+    padding: 30px;
+    color: #3a2c18;
+    font-family: 'Times New Roman', serif;
+    box-shadow: 0 0 25px rgba(0, 0, 0, 0.5);
+    background-size: 200px;
+}
+
+/* Заголовок */
+.header h2 {
+    text-align: center;
+    color: #5c3a21;
+    font-family: 'MedievalSharp', cursive;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+    margin-bottom: 5px;
+}
+
+.divider {
+    display: flex;
+    align-items: center;
+    margin: 15px 0;
+}
+
+.divider-left, .divider-right {
+    flex-grow: 1;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, #5c3a21, transparent);
+}
+
+.divider-center {
+    padding: 0 15px;
+    color: #5c3a21;
+    font-size: 20px;
+}
+
+/* Реквизиты */
+.donate-item {
+    display: flex;
+    align-items: center;
+    margin: 15px 0;
+    padding: 8px;
+    background: rgba(255, 248, 220, 0.5);
+    border-radius: 5px;
+}
+
+.icon {
+    font-size: 24px;
+    margin-right: 15px;
+    width: 30px;
+    text-align: center;
+}
+
+.label {
+    font-weight: bold;
+    flex: 1;
+    font-family: 'MedievalSharp', cursive;
+}
+
+.value {
+    flex: 2;
+    font-family: 'Courier New', monospace;
+    word-break: break-all;
+}
+
+/* Кнопки */
+.fantasy-btn {
+    background: #8b5a2b;
+    color: #f5e7c1;
+    border: 2px solid #5c3a21;
+    border-radius: 5px;
+    padding: 5px 10px;
+    margin-left: 10px;
+    cursor: pointer;
+    font-family: 'MedievalSharp', cursive;
+    transition: all 0.3s;
+}
+
+.fantasy-btn:hover {
+    background: #5c3a21;
+    transform: scale(1.1);
+}
+
+.close {
+    position: absolute;
+    right: 20px;
+    top: 15px;
+    color: #5c3a21;
+    font-size: 28px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.close:hover {
+    color: #3a2c18;
+    transform: rotate(90deg);
+    transition: transform 0.3s;
+}
+
+/* Подвал */
+.footer {
+    text-align: center;
+    font-style: italic;
+    margin-top: 20px;
+    color: #5c3a21;
+}
+
+/* Анимации */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-50px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.modal-content {
+    animation: fadeIn 0.5s ease-out;
+}
+

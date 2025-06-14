@@ -1,0 +1,11 @@
+{{define "content"}}
+<div class="language-selector">
+    <h2>Select Language</h2>
+    <form method="POST" action="/set-language">
+        <div class="language-options">
+            <button type="submit" name="language" value="en" class="fantasy-button">English</button>
+            <button type="submit" name="language" value="ru" class="fantasy-button">Русский</button>
+        </div>
+    </form>
+</div>
+{{end}}

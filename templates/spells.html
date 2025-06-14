@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="{{.Language}}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pathfinder Wiki</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=MedievalSharp&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+    <header>
+    <h1>Pathfinder Fan Wiki</h1>
+    <div class="language-selector">
+        <form action="/set-language" method="post">
+            <input type="hidden" name="return_to" value="{{.ReturnTo}}">
+            <select name="lang" onchange="this.form.submit()">
+                {{range .AvailableLangs}}
+                <option value="{{.}}" {{if eq . $.Language}}selected{{end}}>
+                    {{if eq . "EN"}}English{{end}}
+                </option>
+                {{end}}
+            </select>
+        </form>
+    </div>
+    <nav>
+        <a href="/">Home</a>
+    </nav>
+</header>
+
+<div class="spells-container">
+    <h2>Spells Database</h2>
+    
+    <!-- Поиск и сброс фильтров -->
+    <div class="spell-controls">
+        <form method="GET" class="spell-search">
+            <input type="text" name="search" value="{{.SearchQuery}}" placeholder="Search spells...">
+            <button type="submit">Search</button>
+            <a href="?" class="reset-btn">Reset</a>
+        </form>
+    </div>
+
+    <!-- Таблица с фильтрами -->
+    <div class="table-responsive">
+        <table class="spell-table">
+            <thead>
+                <tr>
+                    {{range .Columns}}
+                    <th>                   
+                        {{.Name}}
+                        {{if .Sortable}}
+                        <div class="sort-arrows">
+                            <a href="?sort={{.Name}}&order=asc" class="{{if and (eq $.SortColumn .Name) (eq $.SortOrder "asc")}}active{{end}}">↑</a>
+                            <a href="?sort={{.Name}}&order=desc" class="{{if and (eq $.SortColumn .Name) (eq $.SortOrder "desc")}}active{{end}}">↓</a>
+                        </div>
+                        {{end}}
+                        
+                        <!-- Добавляем выпадающие меню для фильтрации -->
+                        {{if .Filterable}}
+                        <div class="filter-dropdown">
+                            <button class="filter-btn">▼</button>
+                            <div class="filter-menu">
+                                {{if eq .Name "School"}}
+                                    {{range $val := index $.FilterOptions "school"}}
+                                    <label>
+                                        <input type="checkbox" name="school" value="{{$val}}"
+                                               {{if inFilter $.Filters "school" $val}}checked{{end}}>
+                                        {{$val}}
+                                    </label>
+                                    {{end}}
+                                {{else if eq .Name "Type"}}
+                                    {{range $val := index $.FilterOptions "type"}}
+                                    <label>
+                                        <input type="checkbox" name="type" value="{{$val}}"
+                                               {{if inFilter $.Filters "type" $val}}checked{{end}}>
+                                        {{$val}}
+                                    </label>
+                                    {{end}}
+                                {{else if eq .Name "Target"}}
+                                    {{range $val := index $.FilterOptions "target"}}
+                                    <label>
+                                        <input type="checkbox" name="target" value="{{$val}}"
+                                               {{if inFilter $.Filters "target" $val}}checked{{end}}>
+                                        {{$val}}
+                                    </label>
+                                    {{end}}
+                                {{else if eq .Name "Descriptors"}}
+                                    {{range $val := index $.FilterOptions "descriptors"}}
+                                    <label>
+                                        <input type="checkbox" name="descriptors" value="{{$val}}"
+                                               {{if inFilter $.Filters "descriptors" $val}}checked{{end}}>
+                                        {{$val}}
+                                    </label>
+                                    {{end}}
+                                {{else if eq .Name "Duration"}}
+                                    {{range $val := index $.FilterOptions "duration"}}
+                                    <label>
+                                        <input type="checkbox" name="duration" value="{{$val}}"
+                                               {{if inFilter $.Filters "duration" $val}}checked{{end}}>
+                                        {{$val}}
+                                    </label>
+                                    {{end}}
+                                {{else if eq .Name "Requirements"}}
+                                    {{range $val := index $.FilterOptions "requirements"}}
+                                    <label>
+                                        <input type="checkbox" name="requirements" value="{{$val}}"
+                                               {{if inFilter $.Filters "requirements" $val}}checked{{end}}>
+                                        {{$val}}
+                                    </label>
+                                    {{end}}
+                                {{else if eq .Name "Level"}}
+                                    {{range $val := index $.FilterOptions "level"}}
+                                    <label>
+                                        <input type="checkbox" name="level" value="{{$val}}"
+                                               {{if inFilter $.Filters "level" $val}}checked{{end}}>
+                                        {{$val}}
+                                    </label>
+                                    {{end}}
+                                {{else if eq .Name "SavingThrow"}}
+                                    {{range $val := index $.FilterOptions "savingThrow"}}
+                                    <label>
+                                        <input type="checkbox" name="savingThrow" value="{{$val}}"
+                                               {{if inFilter $.Filters "savingThrow" $val}}checked{{end}}>
+                                        {{$val}}
+                                    </label>
+                                    {{end}}
+                                {{else if eq .Name "ActionType"}}
+                                    {{range $val := index $.FilterOptions "action_type"}}
+                                    <label>
+                                        <input type="checkbox" name="action_type" value="{{$val}}"
+                                               {{if inFilter $.Filters "action_type" $val}}checked{{end}}>
+                                        {{$val}}
+                                    </label>
+                                    {{end}}
+                                {{else if eq .Name "SpellResist"}}
+                                    {{range $val := index $.FilterOptions "spellResist"}}
+                                    <label>
+                                        <input type="checkbox" name="spellResist" value="{{$val}}"
+                                               {{if inFilter $.Filters "spellResist" $val}}checked{{end}}>
+                                        {{$val}}
+                                    </label>
+                                    {{end}}
+                                {{else if eq .Name "Metamagic"}}
+                                    {{range $val := index $.FilterOptions "metamagic"}}
+                                    <label>
+                                        <input type="checkbox" name="metamagic" value="{{$val}}"
+                                               {{if inFilter $.Filters "metamagic" $val}}checked{{end}}>
+                                        {{$val}}
+                                    </label>
+                                    {{end}}
+                                {{else if eq .Name "Crafting"}}
+                                    {{range $val := index $.FilterOptions "crafting"}}
+                                    <label>
+                                        <input type="checkbox" name="crafting" value="{{$val}}"
+                                               {{if inFilter $.Filters "crafting" $val}}checked{{end}}>
+                                        {{$val}}
+                                    </label>
+                                    {{end}}
+                                {{end}}
+                                <div class="filter-actions">
+                                    <button type="button" class="apply-filter">Apply</button>
+                                    <button type="button" class="clear-filter">Clear</button>
+                                </div>
+                            </div>
+                        </div>
+                        {{end}}
+                    </th>
+                    {{end}}
+                </tr>
+            </thead>
+            <tbody>
+                {{range .Spells}}
+                <tr>
+                    <td>{{if .Image}}
+                        <img src="{{.Image}}" alt="{{.Name}}" class="spell-image">
+                        {{end}}
+                        {{.Name}}</td>
+                    <td>{{.Description}}</td>
+                    <td>{{.School}}</td>
+                    <td>
+                        {{range $index, $item := .Type}}
+                            {{if $index}}, {{end}}{{$item}}
+                        {{else}}
+                            -
+                        {{end}}
+                    </td>
+                    <td>{{.Target}}</td>
+                    <td>
+                        {{range $index, $item := .Descriptors}}
+                            {{if $index}}, {{end}}{{$item}}
+                        {{else}}
+                            -
+                        {{end}}
+                    </td>
+                    <td>{{.Duration}}</td>
+                    <td>{{.Level}}</td>
+                    <td>
+                        {{range $index, $item := .Requirements}}
+                            {{if $index}}, {{end}}{{$item}}
+                        {{else}}
+                            -
+                        {{end}}
+                    </td>
+                    <td>{{.SavingThrow}}</td>
+                    <td>{{.ActionType}}</td>
+                    <td>{{.SpellResist}}</td>
+                    <td>
+                        {{range $index, $item := .Metamagic}}
+                            {{if $index}}, {{end}}{{$item}}
+                        {{else}}
+                            -
+                        {{end}}
+                    </td>
+                    <td>
+                        {{range $index, $item := .Crafting}}
+                            {{if $index}}, {{end}}{{$item}}
+                        {{else}}
+                            -
+                        {{end}}
+                    </td>
+                </tr>
+                {{else}}
+                <tr>
+                    <td colspan="14">No spells found</td>
+                </tr>
+                {{end}}
+            </tbody>
+        </table>
+    </div>
+    <footer>
+        <button id="donateBtn" class="donate-button">Buy me a coffee</button>
+    </footer>
+    
+    <div id="donateModal" class="modal">
+        <div class="modal-content fantasy-modal">
+            <div class="parchment">
+                <span class="close">&times;</span>
+                <div class="header">
+                    <h2>🛡️ Support the laborer 🛡️</h2>
+                    <div class="divider">
+                        <div class="divider-left"></div>
+                        <div class="divider-center">✧</div>
+                        <div class="divider-right"></div>
+                    </div>
+                </div>
+                <div class="donate-details">
+                    <div class="donate-item">
+                        <span class="icon">💰</span>
+                        <span class="label">Golden coins:</span>
+                        <span href="https://www.donationalerts.com/r/birguslatro" class="value">https://www.donationalerts.com/r/birguslatro</span>
+                        <button class="copy-btn fantasy-btn">📜</button>
+                    </div>
+                    <div class="donate-item">
+                        <span class="icon">🔮</span>
+                        <span class="label">Magic crystals:</span>
+                        <span class="value">0xdd28b4c7cf2a42180bdd47f9985a7d4bbfbe16da</span>
+                        <button class="copy-btn fantasy-btn">📜</button>
+                    </div>
+                    <div class="donate-item">
+                        <span class="icon">🕊️</span>
+                        <span class="label">Pigeon mail:</span>
+                        <span class="value">kaktus.fikus2024@gmail.com</span>
+                        <button class="copy-btn fantasy-btn">📜</button>
+                    </div>
+                </div>
+                <div class="footer">
+                    <p>Your support helps me see a miracle!</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Обработка кнопок фильтрации
+        document.querySelectorAll('.filter-btn').forEach(btn => {
+            btn.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                const menu = this.nextElementSibling;
+                
+                // Закрываем все другие меню
+                document.querySelectorAll('.filter-menu').forEach(m => {
+                    if (m !== menu) m.style.display = 'none';
+                });
+                
+                // Переключаем текущее меню
+                menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
+            });
+        });
+    
+        // Закрытие меню при клике вне его
+        document.addEventListener('click', function(e) {
+            if (!e.target.closest('.filter-dropdown')) {
+                document.querySelectorAll('.filter-menu').forEach(m => {
+                    m.style.display = 'none';
+                });
+            }
+        });
+    
+        // Остановка всплытия для самого меню
+        document.querySelectorAll('.filter-menu').forEach(menu => {
+            menu.addEventListener('click', function(e) {
+                e.stopPropagation();
+            });
+        });
+    
+        // Применение фильтров
+        document.querySelectorAll('.apply-filter').forEach(btn => {
+    btn.addEventListener('click', function() {
+        const menu = this.closest('.filter-menu');
+        const column = menu.querySelector('input[type="checkbox"]').name;
+        const checkboxes = menu.querySelectorAll(`input[name="${column}"]:checked`);
+        
+        const url = new URL(window.location.href);
+        url.searchParams.delete(`filter_${column}`);
+        
+        if (checkboxes.length > 0) {
+            const values = Array.from(checkboxes).map(cb => cb.value);
+            // Добавляем каждый выбранный фильтр как отдельный параметр
+            values.forEach(value => {
+                url.searchParams.append(`filter_${column}`, value);
+            });
+        }
+        
+        window.location.href = url.toString();
+    });
+});
+    });
+    </script>
+
+<script>
+    // Получаем элементы
+    const modal = document.getElementById("donateModal");
+    const btn = document.getElementById("donateBtn");
+    const span = document.getElementsByClassName("close")[0];
+
+    // Открываем модальное окно при клике на кнопку
+    btn.onclick = function() {
+        modal.style.display = "block";
+    }
+
+    // Закрываем при клике на крестик
+    span.onclick = function() {
+        modal.style.display = "none";
+    }
+
+    // Закрываем при клике вне окна
+    window.onclick = function(event) {
+        if (event.target == modal) {
+            modal.style.display = "none";
+        }
+    }
+    document.querySelectorAll('.copy-btn').forEach(btn => {
+    btn.addEventListener('click', function() {
+        const valueElement = this.parentElement.querySelector('.value');
+        const text = valueElement.textContent.trim();
+        
+        navigator.clipboard.writeText(text).then(() => {
+            const originalText = this.textContent;
+            this.textContent = '✔️';
+            setTimeout(() => {
+                this.textContent = originalText;
+            }, 2000);
+        });
+    });
+});
+</script>
