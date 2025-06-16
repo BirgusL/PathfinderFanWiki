@@ -13,7 +13,7 @@ import (
 	"strings"
 	"time"
 
-	_ "modernc.org/sqlite"
+	_ "github.com/lib/pq"
 )
 
 var db *sql.DB
@@ -78,17 +78,10 @@ func (j *JSONStringSlice) Scan(value interface{}) error {
 	return json.Unmarshal(bytes, j)
 }
 
-func (j JSONStringSlice) String() string {
-	if len(j) == 0 {
-		return "" // или "none", если нужно специальное значение для пустого списка
-	}
-	return strings.Join(j, ", ")
-}
-
 func main() {
 	var err error
 	// Initialize database
-	db, err = sql.Open("sqlite", "./database/spells.db")
+	db, err = sql.Open("postgres", "user=postgres password=123456 dbname=spells sslmode=disable")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -127,29 +120,18 @@ func main() {
 }
 
 func homeHandler(w http.ResponseWriter, r *http.Request) {
-	//log.Println("Home handler executed")
-
 	lang := getLanguage(r)
 
-	if lang == "" {
-		lang = "en" // гарантированное значение
-		http.SetCookie(w, &http.Cookie{
-			Name:  "lang",
-			Value: lang,
-			Path:  "/",
-		})
-	}
-
 	data := map[string]interface{}{
-		"Language":       lang,
-		"ReturnTo":       r.URL.Path,
-		"AvailableLangs": []string{"EN", "RU", "DE", "FR"},
+		"LangData": map[string]interface{}{
+			"Language":       lang,
+			"ReturnTo":       r.URL.Path,
+			"AvailableLangs": []string{"EN", "RU", "DE", "FR"},
+		},
 	}
-
-	//log.Printf("Template data: %+v", data)
 
 	if err := tmpl.ExecuteTemplate(w, "home.html", data); err != nil {
-		log.Println("Render error:", err) // Выведет ошибку в консоль
+		log.Println("Render error:", err)
 		http.Error(w, "Server error", 500)
 	}
 }
@@ -157,44 +139,34 @@ func homeHandler(w http.ResponseWriter, r *http.Request) {
 func kingmakerHandler(w http.ResponseWriter, r *http.Request) {
 	lang := getLanguage(r)
 
-	if lang == "" {
-		lang = "en" // гарантированное значение
-		http.SetCookie(w, &http.Cookie{
-			Name:  "lang",
-			Value: lang,
-			Path:  "/",
-		})
-	}
-
 	data := map[string]interface{}{
-		"Language":       lang,
-		"ReturnTo":       r.URL.Path,
-		"AvailableLangs": []string{"EN", "RU", "DE", "FR"},
+		"LangData": map[string]interface{}{
+			"Language":       lang,
+			"ReturnTo":       r.URL.Path,
+			"AvailableLangs": []string{"EN", "RU", "DE", "FR"},
+		},
 	}
 	tmpl.ExecuteTemplate(w, "kingmaker.html", data)
 }
 
+// Parameters for displaying buttons
+type ColumnInfo struct {
+	Name       string
+	Filterable bool
+	Sortable   bool
+}
+
 func spellsHandler(w http.ResponseWriter, r *http.Request) {
 	lang := getLanguage(r)
-	if lang == "" {
-		lang = "en"
-		http.SetCookie(w, &http.Cookie{
-			Name:  "lang",
-			Value: lang,
-			Path:  "/",
-		})
-	}
 
-	// Получаем параметры
+	// Get parameters
 	searchQuery := r.FormValue("search")
 	sortColumn := r.FormValue("sort")
 	sortOrder := r.FormValue("order")
 	filters := parseFilters(r)
 
-	// Строим запрос
 	query, args := buildQuery(lang, searchQuery, filters, sortColumn, sortOrder)
 
-	// Выполняем запрос
 	rows, err := db.Query(query, args...)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -222,7 +194,6 @@ func spellsHandler(w http.ResponseWriter, r *http.Request) {
 		spells = append(spells, s)
 	}
 
-	// Получаем уникальные значения для фильтров
 	filterOptions := getFilterOptions(lang)
 
 	data := map[string]interface{}{
@@ -234,6 +205,11 @@ func spellsHandler(w http.ResponseWriter, r *http.Request) {
 		"SortOrder":      sortOrder,
 		"Filters":        filters,
 		"FilterOptions":  filterOptions,
+		"LangData": map[string]interface{}{
+			"Language":       lang,
+			"ReturnTo":       r.URL.Path,
+			"AvailableLangs": []string{"EN", "RU", "DE", "FR"},
+		},
 		"Columns": []ColumnInfo{
 			{Name: "Name", Filterable: false, Sortable: true},
 			{Name: "Description", Filterable: false},
@@ -255,19 +231,13 @@ func spellsHandler(w http.ResponseWriter, r *http.Request) {
 	tmpl.ExecuteTemplate(w, "spells.html", data)
 }
 
-type ColumnInfo struct {
-	Name       string
-	Filterable bool
-	Sortable   bool
-}
-
+// Parse filtes from url
 func parseFilters(r *http.Request) []Filter {
 	var filters []Filter
 
 	for key, values := range r.URL.Query() {
 		if strings.HasPrefix(key, "filter_") {
 			column := strings.TrimPrefix(key, "filter_")
-			// Обрабатываем несколько значений через запятую
 			if len(values) > 0 {
 				for _, value := range strings.Split(values[0], ",") {
 					if value != "" {
@@ -284,6 +254,7 @@ func parseFilters(r *http.Request) []Filter {
 	return filters
 }
 
+// Set language to cookie
 func languageHandler(w http.ResponseWriter, r *http.Request) {
 	lang := r.FormValue("lang")
 	returnTo := r.FormValue("return_to")
@@ -300,21 +271,20 @@ func languageHandler(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, returnTo, http.StatusSeeOther)
 }
 
+// Get language from cookie
 func getLanguage(r *http.Request) string {
-	// 1. Проверяем куки
 	if cookie, err := r.Cookie("lang"); err == nil && cookie.Value != "" {
 		return cookie.Value
 	}
 
-	// 2. Проверяем URL-параметр
 	if lang := r.URL.Query().Get("lang"); lang != "" {
 		return lang
 	}
 
-	// 3. Значение по умолчанию
-	return "EN" // обязательно возвращаем значение по умолчанию
+	return "EN"
 }
 
+// Html fields translation prototype *not working at spells.html yet*
 func translate(lang, key string) string {
 	// Простая реализация - можно заменить на более сложную логику
 	translations := map[string]map[string]string{
@@ -343,7 +313,7 @@ func translate(lang, key string) string {
 			return val
 		}
 	}
-	return key // Возвращаем ключ, если перевод не найден
+	return key
 }
 
 func buildQuery(lang, search string, filters []Filter, sortColumn, sortOrder string) (string, []interface{}) {
@@ -351,9 +321,9 @@ func buildQuery(lang, search string, filters []Filter, sortColumn, sortOrder str
 	var args []interface{}
 	argCounter := 1
 
-	// Поиск
+	// Search
 	if search != "" {
-		searchColumns := []string{"s.Name", "s.Description"}
+		searchColumns := []string{"s.\"Name\"", "s.\"Description\""}
 		var searchConditions []string
 		for _, col := range searchColumns {
 			searchConditions = append(searchConditions, fmt.Sprintf("%s LIKE $%d", col, argCounter))
@@ -363,32 +333,32 @@ func buildQuery(lang, search string, filters []Filter, sortColumn, sortOrder str
 		where = append(where, "("+strings.Join(searchConditions, " OR ")+")")
 	}
 
-	// Группируем фильтры по колонкам
+	// Group filters by columns
 	filterGroups := make(map[string][]string)
 	for _, filter := range filters {
 		filterGroups[filter.Column] = append(filterGroups[filter.Column], filter.Value)
 	}
 
-	// Для каждой колонки создаем условие (AND между значениями)
+	// Creating conditions
 	for column, values := range filterGroups {
 		var conditions []string
 
 		for _, value := range values {
-			if column == "type" || column == "descriptors" ||
-				column == "requirements" || column == "metamagic" ||
-				column == "crafting" {
+			if column == "TypeJSON" || column == "DescriptorsJSON" ||
+				column == "RequirementsJSON" || column == "MetamagicJSON" ||
+				column == "CraftingJSON" {
 				// Для JSON-полей
-				conditions = append(conditions, fmt.Sprintf("i.%sJSON LIKE $%d", strings.Title(column), argCounter))
+				conditions = append(conditions, fmt.Sprintf("i.\"%s\" LIKE $%d", column, argCounter))
 				args = append(args, `%"`+value+`"%`)
 			} else {
 				// Для обычных полей
-				conditions = append(conditions, fmt.Sprintf("i.%s = $%d", strings.Title(column), argCounter))
+				conditions = append(conditions, fmt.Sprintf("i.\"%s\" = $%d", column, argCounter))
 				args = append(args, value)
 			}
 			argCounter++
 		}
 
-		// Объединяем условия для одной колонки через AND
+		// Group conditions with AND
 		if len(conditions) > 0 {
 			where = append(where, "("+strings.Join(conditions, " AND ")+")")
 		}
@@ -396,12 +366,12 @@ func buildQuery(lang, search string, filters []Filter, sortColumn, sortOrder str
 
 	query := fmt.Sprintf(`
         SELECT 
-            s.id, s.Name, s.Description, i.School, i.TypeJSON, i.Target, 
-            i.DescriptorsJSON, i.Duration, i.Level, i.RequirementsJSON, 
-            i.Saving_Throw, i.Action_Type, i.Spell_Resist, 
-            i.MetamagicJSON, i.CraftingJSON, i.Image  
-        FROM Spells_%s s 
-        LEFT JOIN Spells_Info i ON s.id = i.spell_id
+            s."id", s."Name", s."Description", i."School", i."TypeJSON", i."Target", 
+            i."DescriptorsJSON", i."Duration", i."Level", i."RequirementsJSON", 
+            i."Saving_Throw", i."Action_Type", i."Spell_Resist", 
+            i."MetamagicJSON", i."CraftingJSON", i."Image"  
+        FROM "Spells_%s" s 
+        LEFT JOIN "Spells_Info" i ON s."id" = i."spell_id"
     `, lang)
 
 	if len(where) > 0 {
@@ -409,7 +379,7 @@ func buildQuery(lang, search string, filters []Filter, sortColumn, sortOrder str
 	}
 
 	if sortColumn != "" {
-		query += " ORDER BY " + sortColumn
+		query += " ORDER BY " + "\"" + sortColumn + "\""
 		if sortOrder == "desc" {
 			query += " DESC"
 		}
@@ -418,28 +388,29 @@ func buildQuery(lang, search string, filters []Filter, sortColumn, sortOrder str
 	return query, args
 }
 
+// Get Filter Option to html filter panels
 func getFilterOptions(lang string) map[string][]string {
 	columns := map[string]string{
-		"school":       "i.School",
-		"type":         "i.TypeJSON", // Исправлено с type на TypeJSON
-		"target":       "i.Target",
-		"descriptors":  "i.DescriptorsJSON",
-		"duration":     "i.Duration",
-		"level":        "i.Level",
-		"requirements": "i.RequirementsJSON",
-		"savingThrow":  "i.Saving_Throw",
-		"action_type":  "i.Action_Type",
-		"spellResist":  "i.Spell_Resist",
-		"metamagic":    "i.MetamagicJSON",
-		"crafting":     "i.CraftingJSON",
+		"school":       "i.\"School\"",
+		"type":         "i.\"TypeJSON\"",
+		"target":       "i.\"Target\"",
+		"descriptors":  "i.\"DescriptorsJSON\"",
+		"duration":     "i.\"Duration\"",
+		"level":        "i.\"Level\"::text",
+		"requirements": "i.\"RequirementsJSON\"",
+		"savingThrow":  "i.\"Saving_Throw\"",
+		"action_type":  "i.\"Action_Type\"",
+		"spellResist":  "i.\"Spell_Resist\"",
+		"metamagic":    "i.\"MetamagicJSON\"",
+		"crafting":     "i.\"CraftingJSON\"",
 	}
 	options := make(map[string][]string)
 
 	for colName, col := range columns {
 		query := fmt.Sprintf(`
-            SELECT DISTINCT %s 
-            FROM Spells_%s s 
-            LEFT JOIN Spells_Info i ON s.id = i.spell_id 
+            SELECT %s
+            FROM "Spells_%s" s 
+            LEFT JOIN "Spells_Info" i ON s."id" = i."spell_id" 
             WHERE %s IS NOT NULL AND %s != ''
             ORDER BY %s
         `, col, lang, col, col, col)
@@ -455,10 +426,9 @@ func getFilterOptions(lang string) map[string][]string {
 		for rows.Next() {
 			var val string
 			if err := rows.Scan(&val); err == nil && val != "" {
-				// Для JSON-полей нужно извлечь значения из массива
-				if col == "i.TypeJSON" || col == "i.DescriptorsJSON" ||
-					col == "i.RequirementsJSON" || col == "i.MetamagicJSON" ||
-					col == "i.CraftingJSON" {
+				if col == "i.\"TypeJSON\"" || col == "i.\"DescriptorsJSON\"" ||
+					col == "i.\"RequirementsJSON\"" || col == "i.\"MetamagicJSON\"" ||
+					col == "i.\"CraftingJSON\"" {
 					var jsonArr []string
 					if err := json.Unmarshal([]byte(val), &jsonArr); err == nil {
 						values = append(values, jsonArr...)
@@ -468,7 +438,6 @@ func getFilterOptions(lang string) map[string][]string {
 				}
 			}
 		}
-		// Удаляем дубликаты
 		values = uniqueStrings(values)
 		options[colName] = values
 	}
@@ -476,7 +445,7 @@ func getFilterOptions(lang string) map[string][]string {
 	return options
 }
 
-// Вспомогательная функция для удаления дубликатов
+// Delete copies in filter
 func uniqueStrings(input []string) []string {
 	keys := make(map[string]bool)
 	list := []string{}
@@ -498,19 +467,18 @@ func inFilter(filters []Filter, column, value string) bool {
 	return false
 }
 
+// Session logs
 func loggingMiddleware(db *sql.DB, next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		// Пропускаем статические файлы
 		if r.URL.Path == "/favicon.ico" || r.URL.Path == "/static/" {
 			next.ServeHTTP(w, r)
 			return
 		}
 
-		// Записываем посещение
 		_, err := db.Exec(`
-			INSERT INTO Visit_Info 
-			(Ip, User_Agent, Referer, Path, Visit_time, Session_id) 
-			VALUES (?, ?, ?, ?, ?, ?)`,
+    		INSERT INTO "Visit_Info" 
+    		("Ip", "User_Agent", "Referer", "Path", "Visit_Time", "Session_id") 
+    		VALUES ($1, $2, $3, $4, $5, $6)`,
 			r.RemoteAddr,
 			r.UserAgent(),
 			r.Referer(),
@@ -526,6 +494,7 @@ func loggingMiddleware(db *sql.DB, next http.Handler) http.Handler {
 	})
 }
 
+// Session logs *not working yet*
 func getSessionID(r *http.Request) string {
 	cookie, err := r.Cookie("session_id")
 	if err != nil {
