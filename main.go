@@ -63,7 +63,6 @@ func (j *JSONStringSlice) Scan(value interface{}) error {
 		return nil
 	}
 
-	// Получаем данные из БД (может быть []byte или string)
 	var bytes []byte
 	switch v := value.(type) {
 	case []byte:
@@ -74,7 +73,6 @@ func (j *JSONStringSlice) Scan(value interface{}) error {
 		return errors.New("неподдерживаемый тип для JSONStringSlice")
 	}
 
-	// Десериализуем JSON
 	return json.Unmarshal(bytes, j)
 }
 
