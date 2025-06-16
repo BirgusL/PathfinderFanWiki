@@ -79,7 +79,13 @@ func (j *JSONStringSlice) Scan(value interface{}) error {
 func main() {
 	var err error
 	// Initialize database
-	db, err = sql.Open("postgres", "user=postgres password=UCvpufELIkGqAyafNgQquGjaXWwBzMvw dbname=railway sslmode=disable")
+	connStr := "host=turntable.proxy.rlwy.net " +
+		"port=24013 " +
+		"user=postgres " +
+		"password=UCvpufELIkGqAyafNgQquGjaXWwBzMvw " +
+		"dbname=railway " +
+		"sslmode=require"
+	db, err = sql.Open("postgres", connStr)
 	if err != nil {
 		log.Fatal(err)
 	}
