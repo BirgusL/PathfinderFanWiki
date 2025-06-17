@@ -366,7 +366,7 @@ func buildQuery(lang, search string, filters []Filter, sortColumn, sortOrder str
 
 		// Group conditions with AND
 		if len(conditions) > 0 {
-			where = append(where, "("+strings.Join(conditions, " AND ")+")")
+			where = append(where, "("+strings.Join(conditions, " OR ")+")")
 		}
 	}
 
