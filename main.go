@@ -78,11 +78,19 @@ func (j *JSONStringSlice) Scan(value interface{}) error {
 
 func main() {
 	var err error
+
+	port := os.Getenv("PORT")
+	dbPassword := os.Getenv("PGPASSWORD")
+
+	if port == "" {
+		port = "3000"
+	}
+
 	// Initialize database
 	connStr := "host=turntable.proxy.rlwy.net " +
 		"port=24013 " +
 		"user=postgres " +
-		"password=UCvpufELIkGqAyafNgQquGjaXWwBzMvw " +
+		"password=" + dbPassword +
 		"dbname=railway " +
 		"sslmode=require"
 	db, err = sql.Open("postgres", connStr)
@@ -111,12 +119,6 @@ func main() {
 
 	var handler http.Handler = mux
 	handler = loggingMiddleware(db, handler)
-
-	port := os.Getenv("PORT")
-
-	if port == "" {
-		port = "3000"
-	}
 
 	// Start server
 	fmt.Println("Server running on http://localhost:" + port)
