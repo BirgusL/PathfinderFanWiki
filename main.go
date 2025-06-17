@@ -339,35 +339,28 @@ func buildQuery(lang, search string, filters []Filter, sortColumn, sortOrder str
 		where = append(where, "("+strings.Join(searchConditions, " OR ")+")")
 	}
 
-	// Group filters by columns
-	filterGroups := make(map[string][]string)
+	// Для всех фильтров создаем одно общее условие с OR
+	var filterConditions []string
 	for _, filter := range filters {
-		filterGroups[filter.Column] = append(filterGroups[filter.Column], filter.Value)
+		if filter.Column == "TypeJSON" || filter.Column == "DescriptorsJSON" ||
+			filter.Column == "RequirementsJSON" || filter.Column == "MetamagicJSON" ||
+			filter.Column == "CraftingJSON" {
+			// Для JSON-полей
+			filterConditions = append(filterConditions,
+				fmt.Sprintf("i.\"%s\"::jsonb @> $%d::jsonb", filter.Column, argCounter))
+			args = append(args, fmt.Sprintf(`["%s"]`, filter.Value))
+		} else {
+			// Для обычных полей
+			filterConditions = append(filterConditions,
+				fmt.Sprintf("i.\"%s\" = $%d", filter.Column, argCounter))
+			args = append(args, filter.Value)
+		}
+		argCounter++
 	}
 
-	// Creating conditions
-	for column, values := range filterGroups {
-		var conditions []string
-
-		for _, value := range values {
-			if column == "TypeJSON" || column == "DescriptorsJSON" ||
-				column == "RequirementsJSON" || column == "MetamagicJSON" ||
-				column == "CraftingJSON" {
-				// Для JSON-полей
-				conditions = append(conditions, fmt.Sprintf("i.\"%s\" LIKE $%d", column, argCounter))
-				args = append(args, `%"`+value+`"%`)
-			} else {
-				// Для обычных полей
-				conditions = append(conditions, fmt.Sprintf("i.\"%s\" = $%d", column, argCounter))
-				args = append(args, value)
-			}
-			argCounter++
-		}
-
-		// Group conditions with OR
-		if len(conditions) > 0 {
-			where = append(where, "("+strings.Join(conditions, " OR ")+")")
-		}
+	// Объединяем все условия фильтров через OR
+	if len(filterConditions) > 0 {
+		where = append(where, "("+strings.Join(filterConditions, " OR ")+")")
 	}
 
 	query := fmt.Sprintf(`
