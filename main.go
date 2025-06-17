@@ -244,13 +244,17 @@ func parseFilters(r *http.Request) []Filter {
 	for key, values := range r.URL.Query() {
 		if strings.HasPrefix(key, "filter_") {
 			column := strings.TrimPrefix(key, "filter_")
-			if len(values) > 0 {
-				for _, value := range strings.Split(values[0], ",") {
-					if value != "" {
-						filters = append(filters, Filter{
-							Column: column,
-							Value:  value,
-						})
+			// Обрабатываем как несколько параметров с одинаковым именем
+			for _, value := range values {
+				if value != "" {
+					// И как один параметр с разделителем запятая
+					for _, v := range strings.Split(value, ",") {
+						if v != "" {
+							filters = append(filters, Filter{
+								Column: column,
+								Value:  v,
+							})
+						}
 					}
 				}
 			}
