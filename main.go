@@ -381,7 +381,7 @@ func buildQuery(lang, search string, filters []Filter, sortColumn, sortOrder str
     `, lang)
 
 	if len(where) > 0 {
-		query += " WHERE " + strings.Join(where, " OR ")
+		query += " WHERE " + strings.Join(where, " AND ")
 	}
 
 	if sortColumn != "" {
