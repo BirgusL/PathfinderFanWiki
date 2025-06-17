@@ -244,10 +244,8 @@ func parseFilters(r *http.Request) []Filter {
 	for key, values := range r.URL.Query() {
 		if strings.HasPrefix(key, "filter_") {
 			column := strings.TrimPrefix(key, "filter_")
-			// Обрабатываем как несколько параметров с одинаковым именем
 			for _, value := range values {
 				if value != "" {
-					// И как один параметр с разделителем запятая
 					for _, v := range strings.Split(value, ",") {
 						if v != "" {
 							filters = append(filters, Filter{
@@ -331,7 +329,7 @@ func buildQuery(lang, search string, filters []Filter, sortColumn, sortOrder str
 	var args []interface{}
 	argCounter := 1
 
-	// Поиск
+	// Searcch
 	if search != "" {
 		searchColumns := []string{"s.\"Name\"", "s.\"Description\""}
 		var searchConditions []string
@@ -343,13 +341,13 @@ func buildQuery(lang, search string, filters []Filter, sortColumn, sortOrder str
 		where = append(where, "("+strings.Join(searchConditions, " OR ")+")")
 	}
 
-	// Группируем фильтры по колонкам
+	// Group by columns
 	filterGroups := make(map[string][]string)
 	for _, filter := range filters {
 		filterGroups[filter.Column] = append(filterGroups[filter.Column], filter.Value)
 	}
 
-	// Обрабатываем каждую группу фильтров
+	// Generate conditions
 	for column, values := range filterGroups {
 		if len(values) == 0 {
 			continue
@@ -361,7 +359,6 @@ func buildQuery(lang, search string, filters []Filter, sortColumn, sortOrder str
 
 		var conditions []string
 
-		// Для каждой колонки создаем условия с OR
 		for _, value := range values {
 			if isJSON {
 				conditions = append(conditions,
@@ -375,7 +372,7 @@ func buildQuery(lang, search string, filters []Filter, sortColumn, sortOrder str
 			argCounter++
 		}
 
-		// Условия для одной колонки объединяем через OR
+		// Group conditions
 		if len(conditions) > 0 {
 			where = append(where, "("+strings.Join(conditions, " OR ")+")")
 		}
@@ -391,7 +388,7 @@ func buildQuery(lang, search string, filters []Filter, sortColumn, sortOrder str
         LEFT JOIN "Spells_Info" i ON s."id" = i."spell_id"
     `, lang)
 
-	// Все группы условий объединяем через AND
+	// Union where statements
 	if len(where) > 0 {
 		query += " WHERE " + strings.Join(where, " AND ")
 	}
