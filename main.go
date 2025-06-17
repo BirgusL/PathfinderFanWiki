@@ -327,7 +327,7 @@ func buildQuery(lang, search string, filters []Filter, sortColumn, sortOrder str
 	var args []interface{}
 	argCounter := 1
 
-	// Search
+	// Поиск
 	if search != "" {
 		searchColumns := []string{"s.\"Name\"", "s.\"Description\""}
 		var searchConditions []string
@@ -339,28 +339,42 @@ func buildQuery(lang, search string, filters []Filter, sortColumn, sortOrder str
 		where = append(where, "("+strings.Join(searchConditions, " OR ")+")")
 	}
 
-	// Для всех фильтров создаем одно общее условие с OR
-	var filterConditions []string
+	// Группируем фильтры по колонкам
+	filterGroups := make(map[string][]string)
 	for _, filter := range filters {
-		if filter.Column == "TypeJSON" || filter.Column == "DescriptorsJSON" ||
-			filter.Column == "RequirementsJSON" || filter.Column == "MetamagicJSON" ||
-			filter.Column == "CraftingJSON" {
-			// Для JSON-полей
-			filterConditions = append(filterConditions,
-				fmt.Sprintf("i.\"%s\"::jsonb @> $%d::jsonb", filter.Column, argCounter))
-			args = append(args, fmt.Sprintf(`["%s"]`, filter.Value))
-		} else {
-			// Для обычных полей
-			filterConditions = append(filterConditions,
-				fmt.Sprintf("i.\"%s\" = $%d", filter.Column, argCounter))
-			args = append(args, filter.Value)
-		}
-		argCounter++
+		filterGroups[filter.Column] = append(filterGroups[filter.Column], filter.Value)
 	}
 
-	// Объединяем все условия фильтров через OR
-	if len(filterConditions) > 0 {
-		where = append(where, "("+strings.Join(filterConditions, " OR ")+")")
+	// Обрабатываем каждую группу фильтров
+	for column, values := range filterGroups {
+		if len(values) == 0 {
+			continue
+		}
+
+		isJSON := column == "TypeJSON" || column == "DescriptorsJSON" ||
+			column == "RequirementsJSON" || column == "MetamagicJSON" ||
+			column == "CraftingJSON"
+
+		var conditions []string
+
+		// Для каждой колонки создаем условия с OR
+		for _, value := range values {
+			if isJSON {
+				conditions = append(conditions,
+					fmt.Sprintf("i.\"%s\"::jsonb @> $%d::jsonb", column, argCounter))
+				args = append(args, fmt.Sprintf(`["%s"]`, value))
+			} else {
+				conditions = append(conditions,
+					fmt.Sprintf("i.\"%s\" = $%d", column, argCounter))
+				args = append(args, value)
+			}
+			argCounter++
+		}
+
+		// Условия для одной колонки объединяем через OR
+		if len(conditions) > 0 {
+			where = append(where, "("+strings.Join(conditions, " OR ")+")")
+		}
 	}
 
 	query := fmt.Sprintf(`
@@ -373,6 +387,7 @@ func buildQuery(lang, search string, filters []Filter, sortColumn, sortOrder str
         LEFT JOIN "Spells_Info" i ON s."id" = i."spell_id"
     `, lang)
 
+	// Все группы условий объединяем через AND
 	if len(where) > 0 {
 		query += " WHERE " + strings.Join(where, " AND ")
 	}
