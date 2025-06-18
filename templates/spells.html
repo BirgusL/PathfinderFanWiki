@@ -87,7 +87,7 @@
                                         {{$val}}
                                     </label>
                                     {{end}}
-                                {{else if eq .Name "SavingThrow"}}
+                                {{else if eq .Name "Saving_Throw"}}
                                     {{range $val := index $.FilterOptions "savingThrow"}}
                                     <label>
                                         <input type="checkbox" name="Saving_Throw" value="{{$val}}"
@@ -95,7 +95,7 @@
                                         {{$val}}
                                     </label>
                                     {{end}}
-                                {{else if eq .Name "ActionType"}}
+                                {{else if eq .Name "Action_Type"}}
                                     {{range $val := index $.FilterOptions "action_type"}}
                                     <label>
                                         <input type="checkbox" name="Action_Type" value="{{$val}}"
@@ -103,7 +103,7 @@
                                         {{$val}}
                                     </label>
                                     {{end}}
-                                {{else if eq .Name "SpellResist"}}
+                                {{else if eq .Name "Spell_Resist"}}
                                     {{range $val := index $.FilterOptions "spellResist"}}
                                     <label>
                                         <input type="checkbox" name="Spell_Resist" value="{{$val}}"
