@@ -17,7 +17,7 @@ type Handler struct {
 func NewHandler(spellService service.SpellService) *Handler {
 	tmpl := template.Must(template.New("").Funcs(template.FuncMap{
 		"inFilter": inFilter,
-	}).ParseGlob("../templates/*.html"))
+	}).ParseGlob("templates/*.html"))
 
 	h := &Handler{
 		spellService: spellService,
@@ -25,7 +25,7 @@ func NewHandler(spellService service.SpellService) *Handler {
 		mux:          http.NewServeMux(),
 	}
 
-	fs := http.FileServer(http.Dir("../static"))
+	fs := http.FileServer(http.Dir("static"))
 	h.mux.Handle("/static/", http.StripPrefix("/static/", fs))
 
 	h.mux.HandleFunc("/", h.homeHandler)
