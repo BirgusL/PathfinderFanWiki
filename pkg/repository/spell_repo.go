@@ -5,10 +5,12 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
+	"net/http"
 	"net/url"
 	"pathfinder-wiki/configs"
 	"pathfinder-wiki/pkg/models"
 	"strings"
+	"time"
 
 	_ "github.com/lib/pq"
 )
@@ -16,6 +18,7 @@ import (
 type SpellRepository interface {
 	GetSpells(ctx context.Context, lang, search string, filters []models.Filter, sortColumn, sortOrder string) ([]models.Spell, error)
 	GetFilterOptions(ctx context.Context, lang string) (map[string][]string, error)
+	InsertLogs(r *http.Request, ses models.SessionID)
 }
 
 type spellRepository struct {
@@ -219,4 +222,21 @@ func (r *spellRepository) GetFilterOptions(ctx context.Context, lang string) (ma
 	}
 
 	return options, nil
+}
+
+func (repo *spellRepository) InsertLogs(r *http.Request, ses models.SessionID) {
+	_, err := repo.db.Exec(`
+    		INSERT INTO "Visit_Info" 
+    		("Ip", "User_Agent", "Referer", "Path", "Visit_Time", "Session_id") 
+    		VALUES ($1, $2, $3, $4, $5, $6)`,
+		r.RemoteAddr,
+		r.UserAgent(),
+		r.Referer(),
+		r.URL.Path,
+		time.Now(),
+		ses(r),
+	)
+	if err != nil {
+		fmt.Printf("Ошибка записи посещения: %v", err)
+	}
 }

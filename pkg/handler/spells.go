@@ -159,3 +159,24 @@ func (h *Handler) kingmakerHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	h.tmpl.ExecuteTemplate(w, "kingmaker.html", data)
 }
+
+func (h *Handler) LoggingMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path == "/favicon.ico" || r.URL.Path == "/static/" {
+			next.ServeHTTP(w, r)
+			return
+		}
+
+		h.spellService.InsertLogs(r, getSessionID)
+
+		next.ServeHTTP(w, r)
+	})
+}
+
+func getSessionID(r *http.Request) string {
+	cookie, err := r.Cookie("session_id")
+	if err != nil {
+		return ""
+	}
+	return cookie.Value
+}

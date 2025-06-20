@@ -25,7 +25,7 @@ func main() {
 
 	server := &http.Server{
 		Addr:    ":" + cfg.Port,
-		Handler: h,
+		Handler: h.LoggingMiddleware(h),
 	}
 
 	log.Printf("Server running on http://localhost:%s", cfg.Port)

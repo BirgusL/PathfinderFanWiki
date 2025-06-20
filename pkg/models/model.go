@@ -3,6 +3,7 @@ package models
 import (
 	"encoding/json"
 	"errors"
+	"net/http"
 )
 
 type Spell struct {
@@ -23,6 +24,8 @@ type Spell struct {
 	Crafting     JSONStringSlice
 	Image        string
 }
+
+type SessionID func(*http.Request) string
 
 type Filter struct {
 	Column string
